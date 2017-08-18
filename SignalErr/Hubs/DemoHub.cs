@@ -1,26 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using Microsoft.AspNet.SignalR;
+﻿using Microsoft.AspNet.SignalR;
 
 namespace SignalErr.Hubs
 {
 	public class DemoHub : Hub
 	{
-		public void SendMessage(string message)
+		public void UpdateField(string clientId, string field, string value)
 		{
-			Clients.Others.SendMessage(message);
+			Clients.Others.UpdateField(clientId, field, value);
 		}
 
-		public void UpdateField(string field, string value)
+		public void BlurField(string clientId, string field)
 		{
-			Clients.Others.UpdateField(field, value);
+			Clients.Others.BlurField(clientId, field);
 		}
 
-		public void FocusField(string field)
+		public void FocusField(string clientId, string field)
 		{
-			Clients.Others.FocusField(field);
+			Clients.Others.FocusField(clientId, field);
 		}
 	}
 }

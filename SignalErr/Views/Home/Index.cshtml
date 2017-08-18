@@ -2,6 +2,8 @@
     ViewBag.Title = "Home Page";
 }
 
+<p>&nbsp;</p>
+
 <form name="form">
 	
 	<div class="form-group">
@@ -19,30 +21,72 @@
 @section scripts {
 	<script>
 		(function() {
-			var leHub = $.connection.demoHub;
+			var demoHub = $.connection.demoHub;
 
-			leHub.client.sendMessage = function(message) {
-				console.error(message);
+			var clientId = "@Guid.NewGuid()";
+
+			demoHub.client.focusField = function (sender, fieldName) {
+				if (clientId === sender) {
+					return;
+				}
+
+				var field = $("form[name=form] input[name=" + fieldName + "]");
+
+				field[0].focus();
+
+				field.tooltip("show");
 			};
 
-			leHub.client.focusField = function(field) {
-				$("form[name=form] input[name=" + field + "]")[0].focus();
+			demoHub.client.blurField = function (sender, fieldName) {
+				if (clientId === sender) {
+					return;
+				}
+
+				$("form[name=form] input[name=" + fieldName + "]").tooltip("hide");
 			};
 
-			leHub.client.updateField = function(field, value) {
-				$("form[name=form] input[name=" + field + "]").val(value);
+			demoHub.client.updateField = function (sender, fieldName, value) {
+				if (clientId === sender) {
+					return;
+				}
+
+				var field = $("form[name=form] input[name=" + fieldName + "]");
+
+				field.val(value);
 			};
 
 			$.connection.hub.start()
 				.done(function() {
 					var fields = $("form[name=form] input");
 
-					fields.focus(function() {
-						leHub.server.focusField($(this).attr("name"));
+					fields.tooltip({
+						trigger: "manual",
+						placement: "right",
+						title: "Wird gerade bearbeitet"
 					});
 
-					fields.blur(function() {
-						leHub.server.updateField($(this).attr("name"), $(this).val());
+					fields.focus(function () {
+						demoHub.server.focusField(clientId, $(this).attr("name"));
+					});
+
+					var keyDownDebounce = null;
+
+					fields.keydown(function() {
+						if (keyDownDebounce !== null) {
+							clearTimeout(keyDownDebounce);
+						}
+
+						var field = $(this);
+
+						setTimeout(function () {
+							demoHub.server.updateField(clientId, field.attr("name"), field.val());
+						}, 210);
+					});
+
+					fields.blur(function () {
+						var field = $(this);
+
+						demoHub.server.blurField(clientId, field.attr("name"));
 					});
 				});
 		})();
